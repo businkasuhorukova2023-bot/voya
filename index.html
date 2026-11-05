@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voya | Мир У Твоих Ног</title>
+    <title>Voya 3D | Мир У Твоих Ног</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -22,57 +22,45 @@
         
         body { background-color: var(--light); overflow: hidden; height: 100vh; width: 100vw; touch-action: manipulation; }
 
-        /* --- SPLASH SCREEN (START PAGE) --- */
+        /* --- SPLASH SCREEN (3D EARTH CONTAINER) --- */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); /* Небо */
+            background: radial-gradient(circle at center, #0f2027 0%, #203a43 50%, #2c5364 100%); /* Глубокий космос */
             transition: opacity 0.8s ease-out;
         }
 
-        .earth-container {
-            position: relative;
-            width: 220px; height: 220px;
+        /* Канвас для 3D модели */
+        #earth-canvas {
+            width: 300px; height: 300px;
             margin-bottom: 30px;
-            perspective: 1000px;
+            filter: drop-shadow(0 0 30px rgba(0, 150, 255, 0.4));
         }
-
-        .earth {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c9/Earth_from_space.jpg');
-            background-size: cover;
-            box-shadow: inset -15px -15px 40px rgba(0,0,0,0.4), 0 15px 40px rgba(0,0,0,0.15);
-            animation: rotateEarth 25s linear infinite;
-        }
-
-        @keyframes rotateEarth { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 
         .logo-text {
-            font-size: 3rem; font-weight: 700; color: var(--secondary);
-            letter-spacing: 2px; text-transform: uppercase;
+            font-size: 3rem; font-weight: 800; color: white;
+            letter-spacing: 4px; text-transform: uppercase;
             margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
         }
 
-        .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 40px; font-weight: 300; }
+        .subtitle { font-size: 1.2rem; color: #ccc; margin-bottom: 40px; font-weight: 300; letter-spacing: 1px;}
 
         .btn-start {
             padding: 15px 50px;
             background: var(--primary);
             color: white;
-            font-size: 1.1rem; font-weight: 600;
+            font-size: 1.1rem; font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(255, 94, 98, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 94, 98, 0.5);
             border: none;
+            text-transform: uppercase;
         }
 
-        .btn-start:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(255, 94, 98, 0.6);
-        }
+        .btn-start:hover { transform: scale(1.05); }
 
         /* --- MAIN APP INTERFACE --- */
         #app-interface {
@@ -83,121 +71,170 @@
 
         #map { width: 100%; height: 100%; background: #eee; }
 
-        /* Custom Popup Styling */
-        .leaflet-popup-content-wrapper {
-            border-radius: 15px !important;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2) !important;
-            padding: 0 !important;
-            overflow: hidden;
-            width: 280px !important;
-        }
-        .leaflet-popup-content { margin: 0 !important; }
-        
-        .popup-inner {
-            display: flex; flex-direction: column;
-        }
-        
-        .popup-img {
-            width: 100%; height: 150px; object-fit: cover;
-        }
-        
-        .popup-info {
-            padding: 15px; background: white;
-        }
-        
-        .popup-title { font-size: 1.2rem; font-weight: 700; color: var(--secondary); margin-bottom: 5px; }
-        .popup-desc { font-size: 0.9rem; color: #666; line-height: 1.4; margin-bottom: 15px; }
-        
-        .popup-btn {
-            display: block; width: 100%;
-            background: var(--secondary); color: white;
-            text-align: center; padding: 10px;
-            border-radius: 8px; text-decoration: none;
-            font-weight: 600; font-size: 0.9rem;
-            transition: background 0.3s;
-        }
-        .popup-btn:hover { background: var(--primary); }
+        /* Hide Attribution completely */
+        .leaflet-control-attribution { display: none !important; }
 
-        /* Search Bar Overlay */
-        .search-overlay {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+        /* Top Bar Stats */
+        .top-bar {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .brand-mini { font-weight: 700; color: var(--secondary); font-size: 1.2rem; }
+        
+        /* Search Box */
+        .search-box {
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 400px;
             z-index: 1000;
             background: white;
             border-radius: 30px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 10px 20px;
+            padding: 12px 20px;
             display: flex; align-items: center; gap: 10px;
         }
         .search-input {
             flex-grow: 1; border: none; outline: none; font-size: 1rem; color: #333;
         }
+
+        /* Custom Popup Styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 15px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+            padding: 0 !important;
+            overflow: hidden;
+            width: 300px !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; }
+        
+        .popup-header-img {
+            width: 100%; height: 160px; object-fit: cover;
+        }
+        
+        .popup-body {
+            padding: 20px; background: white;
+        }
+        
+        .city-name-large { font-size: 1.5rem; font-weight: 800; color: var(--secondary); margin-bottom: 5px; }
+        .country-tag { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: block; }
+        
+        .action-buttons-full {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        
+        .btn-main-action {
+            width: 100%; padding: 12px;
+            background: var(--secondary); color: white;
+            border: none; border-radius: 10px;
+            font-weight: 600; cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none; text-align: center;
+        }
+        .btn-main-action:hover { background: #1a252f; }
+
     </style>
 </head>
 <body>
 
-    <!-- 1. SPLASH SCREEN -->
+    <!-- 1. SPLASH SCREEN WITH 3D EARTH -->
     <div id="splash-screen">
-        <div class="earth-container">
-            <div class="earth"></div>
-        </div>
-        <h1 class="logo-text">VOYA</h1>
-        <p class="subtitle">Открой мир для себя</p>
-        <button class="btn-start" onclick="enterApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
+        <canvas id="earth-canvas"></canvas>
+        <h1 class="logo-text">VOYA 3D</h1>
+        <p class="subtitle">Настоящий мир у твоих ног</p>
+        <button class="btn-start" onclick="enterApp()">ВОЙТИ В МИР</button>
     </div>
 
     <!-- 2. MAIN APP -->
     <div id="app-interface">
-        <!-- Map Container -->
         <div id="map"></div>
 
-        <!-- Search Bar -->
-        <div class="search-overlay">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="brand-mini">VOYA<span style="color:var(--primary)">3D</span></div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
             <span style="font-size:1.2rem;">🔍</span>
-            <input type="text" class="search-input" placeholder="Куда хочешь поехать?" onkeyup="handleSearch(event)">
+            <input type="text" class="search-input" placeholder="Поиск города..." onkeyup="handleSearch(event)">
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Data Base with Images
-        const cities = [
-            { 
-                name: "Москва", country: "Россия", lat: 55.75, lng: 37.61, 
-                desc: "Столица с Кремлем, Красной площадью и ночной жизнью.",
-                img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80"
-            },
-            { 
-                name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33, 
-                desc: "Северная Венеция, Эрмитаж и разводные мосты.",
-                img: "https://images.unsplash.com/photo-1556610961-95eba5aad991?auto=format&fit=crop&w=800&q=80"
-            },
-            { 
-                name: "Париж", country: "Франция", lat: 48.85, lng: 2.35, 
-                desc: "Город любви, Эйфелева башня и лучшие круассаны.",
-                img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"
-            },
-            { 
-                name: "Токио", country: "Япония", lat: 35.68, lng: 139.69, 
-                desc: "Киберпанк реальность, храмы и суши.",
-                img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
-            },
-            { 
-                name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00, 
-                desc: "Большое яблоко, Таймс-сквер и Статуя Свободы.",
-                img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80"
-            },
-            { 
-                name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27, 
-                desc: "Роскошь пустыни, небоскребы и золотые рынки.",
-                img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80"
-            },
-             { 
-                name: "Рим", country: "Италия", lat: 41.90, lng: 12.49, 
-                desc: "Колизей, Ватикан и настоящая паста.",
-                img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80"
+        // --- 3D EARTH LOGIC ---
+        let scene, camera, renderer, earthMesh;
+
+        function initEarth() {
+            const canvas = document.getElementById('earth-canvas');
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            // Sphere geometry
+            const geometry = new THREE.SphereGeometry(5, 32, 32);
+            
+            // Texture loader for Earth map
+            const textureLoader = new THREE.TextureLoader();
+            // Using a reliable source for the blue marble texture
+            const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
+            
+            // Material with bump map effect simulation via lighting
+            const material = new THREE.MeshPhongMaterial({ 
+                map: earthTexture,
+                specular: new THREE.Color('grey'),
+                shininess: 5
+            });
+            
+            earthMesh = new THREE.Mesh(geometry, material);
+            scene.add(earthMesh);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+
+            camera.position.z = 15;
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                if(earthMesh) {
+                    earthMesh.rotation.y += 0.002; // Slow rotation
+                }
+                renderer.render(scene, camera);
             }
+            animate();
+        }
+
+        // Start Earth animation immediately
+        window.onload = initEarth;
+
+
+        // --- MAP DATA & LOGIC ---
+        const cities = [
+            { name: "Москва", country: "Россия", lat: 55.75, lng: 37.61, img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80" },
+            { name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33, img: "https://images.unsplash.com/photo-1556610961-95eba5aad991?auto=format&fit=crop&w=800&q=80" },
+            { name: "Сочи", country: "Россия", lat: 43.60, lng: 39.73, img: "https://images.unsplash.com/photo-1547928576-a4a3ed084d35?auto=format&fit=crop&w=800&q=80" },
+            { name: "Новороссийск", country: "Россия", lat: 44.72, lng: 37.77, img: "https://images.unsplash.com/photo-1605256040893-f5e991970531?auto=format&fit=crop&w=800&q=80" },
+            { name: "Владивосток", country: "Россия", lat: 43.11, lng: 131.88, img: "https://images.unsplash.com/photo-1590050752117-238cb0fbce7a?auto=format&fit=crop&w=800&q=80" },
+            { name: "Париж", country: "Франция", lat: 48.85, lng: 2.35, img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80" },
+            { name: "Токио", country: "Япония", lat: 35.68, lng: 139.69, img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80" },
+            { name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00, img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80" },
+            { name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27, img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80" }
         ];
 
         let map, markersLayer;
@@ -212,11 +249,11 @@
         }
 
         function initMap() {
-            // Light Theme Map (CartoDB Positron)
             map = L.map('map').setView([20, 0], 2);
             
+            // Reliable Light Map Tiles
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+                attribution: '' 
             }).addTo(map);
 
             renderMarkers(cities);
@@ -227,17 +264,18 @@
             markersLayer = L.layerGroup().addTo(map);
 
             dataList.forEach(city => {
-                // Standard Red Pin Icon
                 const marker = L.marker([city.lat, city.lng]).addTo(markersLayer);
                 
-                // Create Rich Popup Content
                 const popupContent = `
-                    <div class="popup-inner">
-                        <img src="${city.img}" alt="${city.name}" class="popup-img">
-                        <div class="popup-info">
-                            <h3 class="popup-title">${city.name}</h3>
-                            <p class="popup-desc">${city.desc}</p>
-                            <a href="#" onclick="buildRoute(${city.lat}, ${city.lng}); return false;" class="popup-btn">🚀 Построить маршрут</a>
+                    <div class="popup-header-img">
+                        <img src="${city.img}" alt="${city.name}" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <div class="popup-body">
+                        <h2 class="city-name-large">${city.name}</h2>
+                        <span class="country-tag">${city.country}</span>
+                        
+                        <div class="action-buttons-full">
+                            <button class="btn-main-action" onclick="buildRoute(${city.lat}, ${city.lng})">🗺 Построить маршрут</button>
                         </div>
                     </div>
                 `;
@@ -259,11 +297,10 @@
                 renderMarkers(filtered);
                 
                 if(filtered.length > 0) {
-                     // Zoom to first result
                      const first = filtered[0];
                      map.flyTo([first.lat, first.lng], 10);
                 } else {
-                    alert("Не нашел такой город в списке.");
+                    alert("Город не найден.");
                 }
             }
         }
