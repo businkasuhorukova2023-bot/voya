@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Voya Pro | Умный Путеводитель</title>
+    <title>Voya | Мир У Твоих Ног</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,66 +17,63 @@
             --secondary: #2C3E50; 
             --light: #FDFBF7; 
             --glass: rgba(255, 255, 255, 0.9);
-            --shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         
         body { background-color: var(--light); overflow: hidden; height: 100vh; width: 100vw; touch-action: manipulation; }
 
-        /* --- SPLASH SCREEN --- */
+        /* --- SPLASH SCREEN (FIXED EARTH) --- */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: radial-gradient(circle at center, #1e3c72 0%, #2a5298 100%);
+            background: radial-gradient(circle at center, #1a2a6c 0%, #000000 100%); /* Космос */
             transition: opacity 0.8s ease-out;
         }
 
         .earth-container {
             position: relative;
-            width: 250px; height: 250px;
-            margin-bottom: 30px;
-            perspective: 1000px;
+            width: 300px; height: 300px;
+            margin-bottom: 40px;
         }
 
-        .earth {
+        .earth-static {
             width: 100%; height: 100%;
             border-radius: 50%;
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c9/Earth_from_space.jpg');
+            /* Используем качественное фото Земли целиком */
+            background-image: url('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?q=80&w=1000&auto=format&fit=crop');
             background-size: cover;
-            box-shadow: inset -20px -20px 60px rgba(0,0,0,0.6), 0 0 50px rgba(0, 200, 255, 0.4);
-            animation: rotateEarth 20s linear infinite;
+            background-position: center;
+            box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0, 100, 255, 0.3);
+            animation: pulseGlow 4s infinite alternate;
         }
 
-        @keyframes rotateEarth { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+        @keyframes pulseGlow { from { box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(0, 100, 255, 0.2); } to { box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 60px rgba(0, 100, 255, 0.5); } }
 
         .logo-text {
             font-size: 3rem; font-weight: 800; color: white;
             letter-spacing: 4px; text-transform: uppercase;
             margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(0,200,255,0.8);
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
         }
 
-        .subtitle { font-size: 1.2rem; color: #b2ebf2; margin-bottom: 40px; font-weight: 300; letter-spacing: 1px;}
+        .subtitle { font-size: 1.2rem; color: #ccc; margin-bottom: 40px; font-weight: 300; letter-spacing: 1px;}
 
         .btn-start {
             padding: 15px 50px;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            background: var(--primary);
             color: white;
             font-size: 1.1rem; font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 114, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(255, 94, 98, 0.5);
             border: none;
             text-transform: uppercase;
         }
 
-        .btn-start:hover {
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(0, 114, 255, 0.7);
-        }
+        .btn-start:hover { transform: scale(1.05); }
 
         /* --- MAIN APP INTERFACE --- */
         #app-interface {
@@ -86,6 +83,9 @@
         }
 
         #map { width: 100%; height: 100%; background: #eee; }
+
+        /* Hide Attribution completely */
+        .leaflet-control-attribution { display: none !important; }
 
         /* Top Bar Stats */
         .top-bar {
@@ -100,26 +100,14 @@
 
         .brand-mini { font-weight: 700; color: var(--secondary); font-size: 1.2rem; }
         
-        .currency-widget {
-            background: var(--secondary); color: white;
-            padding: 5px 12px; border-radius: 20px;
-            font-size: 0.8rem; font-weight: 600;
-            display: flex; gap: 10px;
-        }
-
-        /* Search & Random Button Row */
-        .controls-row {
-            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px;
-            z-index: 1000;
-            display: flex; gap: 10px;
-        }
-
+        /* Search Box */
         .search-box {
-            flex-grow: 1;
+            position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px;
+            z-index: 1000;
             background: white;
             border-radius: 30px;
-            box-shadow: var(--shadow);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             padding: 12px 20px;
             display: flex; align-items: center; gap: 10px;
         }
@@ -127,46 +115,20 @@
             flex-grow: 1; border: none; outline: none; font-size: 1rem; color: #333;
         }
 
-        .btn-random {
-            width: 50px; height: 50px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .btn-random:active { transform: scale(0.9); }
-
-        /* Custom Popup Styling - PREMIUM LOOK */
+        /* Custom Popup Styling */
         .leaflet-popup-content-wrapper {
-            border-radius: 20px !important;
+            border-radius: 15px !important;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
             padding: 0 !important;
             overflow: hidden;
-            width: 320px !important;
-            border: 1px solid rgba(255,255,255,0.5);
+            width: 300px !important;
         }
         .leaflet-popup-content { margin: 0 !important; }
         
         .popup-header-img {
             width: 100%; height: 160px; object-fit: cover;
-            position: relative;
         }
         
-        .weather-badge {
-            position: absolute; bottom: 10px; right: 10px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            display: flex; align-items: center; gap: 5px;
-        }
-
         .popup-body {
             padding: 20px; background: white;
         }
@@ -174,20 +136,6 @@
         .city-name-large { font-size: 1.5rem; font-weight: 800; color: var(--secondary); margin-bottom: 5px; }
         .country-tag { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; display: block; }
         
-        .stats-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
-        }
-        
-        .stat-item {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-label { font-size: 0.7rem; color: #666; margin-bottom: 3px; }
-        .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--secondary); }
-        .price-highlight { color: var(--primary); }
-
         .action-buttons-full {
             display: flex; flex-direction: column; gap: 10px;
         }
@@ -201,11 +149,6 @@
             text-decoration: none; text-align: center;
         }
         .btn-main-action:hover { background: #1a252f; }
-        
-        .btn-outline {
-            background: transparent; border: 2px solid var(--secondary); color: var(--secondary);
-        }
-        .btn-outline:hover { background: var(--secondary); color: white; }
 
     </style>
 </head>
@@ -213,54 +156,46 @@
 
     <!-- 1. SPLASH SCREEN -->
     <div id="splash-screen">
-        <div class="earth-container"><div class="earth"></div></div>
-        <h1 class="logo-text">VOYA PRO</h1>
-        <p class="subtitle">Погода • Цены • Маршруты</p>
-        <button class="btn-start" onclick="enterApp()">ЗАПУСТИТЬ ДВИЖОК</button>
+        <div class="earth-container">
+            <div class="earth-static"></div>
+        </div>
+        <h1 class="logo-text">VOYA</h1>
+        <p class="subtitle">Открой мир для себя</p>
+        <button class="btn-start" onclick="enterApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
     </div>
 
     <!-- 2. MAIN APP -->
     <div id="app-interface">
         <div id="map"></div>
 
-        <!-- Top Bar with Currency -->
+        <!-- Top Bar -->
         <div class="top-bar">
             <div class="brand-mini">VOYA<span style="color:var(--primary)">PRO</span></div>
-            <div class="currency-widget" id="currencyDisplay">
-                USD: ... ₽ | EUR: ... ₽
-            </div>
         </div>
 
-        <!-- Controls -->
-        <div class="controls-row">
-            <div class="search-box">
-                <span style="font-size:1.2rem;">🔍</span>
-                <input type="text" class="search-input" placeholder="Поиск города..." onkeyup="handleSearch(event)">
-            </div>
-            <div class="btn-random" onclick="randomDestination()" title="Куда подбросит судьба?">
-                🎲
-            </div>
+        <!-- Search -->
+        <div class="search-box">
+            <span style="font-size:1.2rem;">🔍</span>
+            <input type="text" class="search-input" placeholder="Поиск города..." onkeyup="handleSearch(event)">
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Expanded Database with Mock Prices for Demo
+        // Data Base with Images
         const cities = [
-            { name: "Москва", country: "Россия", lat: 55.75, lng: 37.61, img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80", priceStart: 3500 },
-            { name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33, img: "https://images.unsplash.com/photo-1556610961-95eba5aad991?auto=format&fit=crop&w=800&q=80", priceStart: 4200 },
-            { name: "Париж", country: "Франция", lat: 48.85, lng: 2.35, img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80", priceStart: 120 },
-            { name: "Токио", country: "Япония", lat: 35.68, lng: 139.69, img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80", priceStart: 90 },
-            { name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00, img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80", priceStart: 180 },
-            { name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27, img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80", priceStart: 110 },
-            { name: "Рим", country: "Италия", lat: 41.90, lng: 12.49, img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80", priceStart: 85 },
-            { name: "Барселона", country: "Испания", lat: 41.38, lng: 2.17, img: "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=800&q=80", priceStart: 70 },
-            { name: "Лондон", country: "Великобритания", lat: 51.50, lng: -0.12, img: "https://images.unsplash.com/photo-1520986606214-8b65f0f0f0f0?auto=format&fit=crop&w=800&q=80", priceStart: 150 }
+            { name: "Москва", country: "Россия", lat: 55.75, lng: 37.61, img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80" },
+            { name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33, img: "https://images.unsplash.com/photo-1556610961-95eba5aad991?auto=format&fit=crop&w=800&q=80" },
+            { name: "Сочи", country: "Россия", lat: 43.60, lng: 39.73, img: "https://images.unsplash.com/photo-1547928576-a4a3ed084d35?auto=format&fit=crop&w=800&q=80" },
+            { name: "Новороссийск", country: "Россия", lat: 44.72, lng: 37.77, img: "https://images.unsplash.com/photo-1605256040893-f5e991970531?auto=format&fit=crop&w=800&q=80" },
+            { name: "Париж", country: "Франция", lat: 48.85, lng: 2.35, img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80" },
+            { name: "Токио", country: "Япония", lat: 35.68, lng: 139.69, img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80" },
+            { name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00, img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80" },
+            { name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27, img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80" }
         ];
 
         let map, markersLayer;
-        let currentRates = { usd: 92, eur: 100 }; // Default rates if API fails
 
         function enterApp() {
             document.getElementById('splash-screen').style.opacity = '0';
@@ -268,35 +203,15 @@
                 document.getElementById('splash-screen').style.display = 'none';
                 document.getElementById('app-interface').style.display = 'block';
                 initMap();
-                fetchCurrency(); // Load real rates
             }, 800);
-        }
-
-        async function fetchCurrency() {
-            try {
-                // Free public API for exchange rates
-                const response = await fetch('https://open.er-api.com/v6/latest/USD');
-                const data = await response.json();
-                if(data.rates && data.rates.RUB) {
-                    currentRates.usd = Math.round(data.rates.RUB);
-                    currentRates.eur = Math.round((data.rates.RUB / data.rates.EUR));
-                    updateCurrencyUI();
-                }
-            } catch (e) {
-                console.log("Using default rates");
-                updateCurrencyUI();
-            }
-        }
-
-        function updateCurrencyUI() {
-            document.getElementById('currencyDisplay').innerHTML = `USD: ${currentRates.usd} ₽ | EUR: ${currentRates.eur} ₽`;
         }
 
         function initMap() {
             map = L.map('map').setView([20, 0], 2);
             
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+            // OpenStreetMap Standard Tiles (Always works, no keys needed)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '' // Empty string hides copyright text
             }).addTo(map);
 
             renderMarkers(cities);
@@ -309,87 +224,26 @@
             dataList.forEach(city => {
                 const marker = L.marker([city.lat, city.lng]).addTo(markersLayer);
                 
-                // Fetch Weather asynchronously but show placeholder first
-                const weatherPromise = getWeather(city.lat, city.lng);
+                const popupContent = `
+                    <div class="popup-header-img">
+                        <img src="${city.img}" alt="${city.name}" style="width:100%;height:100%;object-fit:cover;">
+                    </div>
+                    <div class="popup-body">
+                        <h2 class="city-name-large">${city.name}</h2>
+                        <span class="country-tag">${city.country}</span>
+                        
+                        <div class="action-buttons-full">
+                            <button class="btn-main-action" onclick="buildRoute(${city.lat}, ${city.lng})">🗺 Построить маршрут</button>
+                        </div>
+                    </div>
+                `;
                 
-                marker.bindPopup(createPopupContent(city, "Загрузка погоды..."));
-                
-                // Update popup content when weather arrives
-                weatherPromise.then(weatherStr => {
-                    const popup = marker.getPopup();
-                    if(popup) {
-                        popup.setContent(createPopupContent(city, weatherStr));
-                    }
-                });
+                marker.bindPopup(popupContent, { maxWidth: 300, minWidth: 280 });
             });
-        }
-
-        async function getWeather(lat, lng) {
-            try {
-                // Using wttr.in which is free and doesn't need keys
-                const res = await fetch(`https://wttr.in/${lat},${lng}?format=j1`);
-                const data = await res.json();
-                const temp = data.current_condition[0].temp_C;
-                const desc = data.current_condition[0].lang_ru ? data.current_condition[0].lang_ru[0].value : "Облачно";
-                return `${temp}°C • ${desc}`;
-            } catch(e) {
-                return "Погода недоступна";
-            }
-        }
-
-        function createPopupContent(city, weatherInfo) {
-            const currencySymbol = ["Россия"].includes(city.country) ? "₽" : "$";
-            const formattedPrice = city.priceStart.toLocaleString();
-            
-            return `
-                <div class="popup-header-img">
-                    <img src="${city.img}" alt="${city.name}" style="width:100%;height:100%;object-fit:cover;">
-                    <div class="weather-badge">☁️ ${weatherInfo}</div>
-                </div>
-                <div class="popup-body">
-                    <h2 class="city-name-large">${city.name}</h2>
-                    <span class="country-tag">${city.country}</span>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">Отели от</div>
-                            <div class="stat-value price-highlight">${formattedPrice}${currencySymbol}/ночь</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Валюта</div>
-                            <div class="stat-value">${currencySymbol === '$' ? currentRates.usd + '₽/$' : 'Ruble'}</div>
-                        </div>
-                    </div>
-
-                    <div class="action-buttons-full">
-                        <button class="btn-main-action" onclick="buildRoute(${city.lat}, ${city.lng})">🗺 Построить маршрут</button>
-                        <button class="btn-main-action btn-outline" onclick="alert('Функция поиска билетов будет доступна после регистрации партнера')">✈️ Найти билеты</button>
-                    </div>
-                </div>
-            `;
         }
 
         function buildRoute(lat, lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-        }
-
-        function randomDestination() {
-            const randomIndex = Math.floor(Math.random() * cities.length);
-            const targetCity = cities[randomIndex];
-            
-            // Visual feedback
-            navigator.vibrate?.(50); 
-            
-            map.flyTo([targetCity.lat, targetCity.lng], 8, { duration: 2 });
-            
-            // Find the marker and open its popup automatically after flight
-            setTimeout(() => {
-                markersLayer.eachLayer(layer => {
-                    if(layer.getLatLng().lat === targetCity.lat && layer.getLatLng().lng === targetCity.lng) {
-                        layer.openPopup();
-                    }
-                });
-            }, 2000);
         }
 
         function handleSearch(e) {
