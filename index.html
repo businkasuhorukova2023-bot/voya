@@ -8,153 +8,196 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --primary: #FF5E62; 
-            --secondary: #2C3E50; 
-            --light: #FDFBF7; 
-            --dark-space: #0f2027;
+            --primary: #FF5E62; /* Коралловый */
+            --secondary: #2C3E50; /* Темно-синий текст */
+            --light: #FDFBF7; /* Кремовый фон */
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         
         body { background-color: var(--light); overflow: hidden; height: 100vh; width: 100vw; touch-action: manipulation; }
 
-        /* --- SPLASH SCREEN (PURE CSS EARTH) --- */
+        /* --- SPLASH SCREEN (START PAGE) --- */
         #splash-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: radial-gradient(circle at center, #1a2a6c 0%, #000000 100%);
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); /* Небо */
             transition: opacity 0.8s ease-out;
         }
 
-        .earth-css {
-            width: 200px; height: 200px;
-            border-radius: 50%;
-            /* Рисуем материки градиентами - это никогда не сломается */
-            background: 
-                radial-gradient(circle at 30% 30%, #2ecc71 20%, transparent 21%),
-                radial-gradient(circle at 70% 60%, #27ae60 25%, transparent 26%),
-                radial-gradient(circle at 50% 80%, #f1c40f 15%, transparent 16%),
-                linear-gradient(135deg, #2980b9 0%, #6dd5fa 100%);
-            box-shadow: inset -20px -20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(0, 150, 255, 0.5);
-            animation: spinEarth 20s linear infinite;
+        .earth-container {
+            position: relative;
+            width: 220px; height: 220px;
             margin-bottom: 30px;
+            perspective: 1000px;
         }
 
-        @keyframes spinEarth { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+        .earth {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/c/c9/Earth_from_space.jpg');
+            background-size: cover;
+            box-shadow: inset -15px -15px 40px rgba(0,0,0,0.4), 0 15px 40px rgba(0,0,0,0.15);
+            animation: rotateEarth 25s linear infinite;
+        }
 
-        h1 { color: white; font-size: 3rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5);}
-        p.subtitle { color: #aaa; font-size: 1.2rem; margin-bottom: 40px; }
+        @keyframes rotateEarth { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
 
-        button.start-btn {
-            padding: 15px 40px;
+        .logo-text {
+            font-size: 3rem; font-weight: 700; color: var(--secondary);
+            letter-spacing: 2px; text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 40px; font-weight: 300; }
+
+        .btn-start {
+            padding: 15px 50px;
             background: var(--primary);
             color: white;
-            border: none;
+            font-size: 1.1rem; font-weight: 600;
             border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(255, 94, 98, 0.4);
-            transition: transform 0.2s;
-        }
-        button.start-btn:hover { transform: scale(1.05); }
-
-        /* --- MAIN APP --- */
-        #app-interface { display: none; width: 100%; height: 100%; position: relative; }
-        #map { width: 100%; height: 100%; }
-
-        /* Hide Leaflet Logo/Attribution */
-        .leaflet-control-attribution, .leaflet-control-logo { display: none !important; }
-
-        /* Top Controls */
-        .top-controls {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 500px;
-            z-index: 1000;
-            display: flex; gap: 10px;
-        }
-
-        .search-input {
-            flex-grow: 1;
-            padding: 12px 20px;
-            border-radius: 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 94, 98, 0.4);
             border: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            font-size: 1rem;
-            outline: none;
         }
 
-        .dice-btn {
-            width: 45px; height: 45px;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            display: flex; align-items: center; justify-content: center;
+        .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 94, 98, 0.6);
         }
-        .dice-btn:active { transform: scale(0.9); }
 
-        /* Popup Design */
-        .custom-popup {
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            min-width: 250px;
+        /* --- MAIN APP INTERFACE --- */
+        #app-interface {
+            display: none; 
+            width: 100%; height: 100%;
+            position: relative;
         }
-        .popup-city { font-size: 1.4rem; font-weight: bold; color: var(--secondary); margin-bottom: 5px; }
-        .popup-country { font-size: 0.9rem; color: #888; margin-bottom: 15px; }
+
+        #map { width: 100%; height: 100%; background: #eee; }
+
+        /* Custom Popup Styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 15px !important;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2) !important;
+            padding: 0 !important;
+            overflow: hidden;
+            width: 280px !important;
+        }
+        .leaflet-popup-content { margin: 0 !important; }
+        
+        .popup-inner {
+            display: flex; flex-direction: column;
+        }
+        
+        .popup-img {
+            width: 100%; height: 150px; object-fit: cover;
+        }
+        
+        .popup-info {
+            padding: 15px; background: white;
+        }
+        
+        .popup-title { font-size: 1.2rem; font-weight: 700; color: var(--secondary); margin-bottom: 5px; }
+        .popup-desc { font-size: 0.9rem; color: #666; line-height: 1.4; margin-bottom: 15px; }
+        
         .popup-btn {
             display: block; width: 100%;
-            background: var(--primary); color: white;
+            background: var(--secondary); color: white;
             text-align: center; padding: 10px;
             border-radius: 8px; text-decoration: none;
-            font-weight: 600;
+            font-weight: 600; font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        .popup-btn:hover { background: var(--primary); }
+
+        /* Search Bar Overlay */
+        .search-overlay {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 400px;
+            z-index: 1000;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .search-input {
+            flex-grow: 1; border: none; outline: none; font-size: 1rem; color: #333;
         }
     </style>
 </head>
 <body>
 
-    <!-- SPLASH SCREEN -->
+    <!-- 1. SPLASH SCREEN -->
     <div id="splash-screen">
-        <div class="earth-css"></div>
-        <h1>VOYA</h1>
+        <div class="earth-container">
+            <div class="earth"></div>
+        </div>
+        <h1 class="logo-text">VOYA</h1>
         <p class="subtitle">Открой мир для себя</p>
-        <button class="start-btn" onclick="enterApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
+        <button class="btn-start" onclick="enterApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- 2. MAIN APP -->
     <div id="app-interface">
+        <!-- Map Container -->
         <div id="map"></div>
-        
-        <div class="top-controls">
-            <input type="text" class="search-input" placeholder="Поиск города..." onkeyup="handleSearch(event)">
-            <button class="dice-btn" onclick="randomDestination()" title="Куда судьба?">🎲</button>
+
+        <!-- Search Bar -->
+        <div class="search-overlay">
+            <span style="font-size:1.2rem;">🔍</span>
+            <input type="text" class="search-input" placeholder="Куда хочешь поехать?" onkeyup="handleSearch(event)">
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // База данных городов (только то, что точно есть)
+        // Data Base with Images
         const cities = [
-            { name: "Москва", country: "Россия", lat: 55.75, lng: 37.61 },
-            { name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33 },
-            { name: "Сочи", country: "Россия", lat: 43.60, lng: 39.73 },
-            { name: "Новороссийск", country: "Россия", lat: 44.72, lng: 37.77 },
-            { name: "Владивосток", country: "Россия", lat: 43.11, lng: 131.88 },
-            { name: "Казань", country: "Россия", lat: 55.79, lng: 49.12 },
-            { name: "Париж", country: "Франция", lat: 48.85, lng: 2.35 },
-            { name: "Лондон", country: "Англия", lat: 51.50, lng: -0.12 },
-            { name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00 },
-            { name: "Токио", country: "Япония", lat: 35.68, lng: 139.69 },
-            { name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27 },
-            { name: "Рим", country: "Италия", lat: 41.90, lng: 12.49 }
+            { 
+                name: "Москва", country: "Россия", lat: 55.75, lng: 37.61, 
+                desc: "Столица с Кремлем, Красной площадью и ночной жизнью.",
+                img: "https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=800&q=80"
+            },
+            { 
+                name: "Санкт-Петербург", country: "Россия", lat: 59.93, lng: 30.33, 
+                desc: "Северная Венеция, Эрмитаж и разводные мосты.",
+                img: "https://images.unsplash.com/photo-1556610961-95eba5aad991?auto=format&fit=crop&w=800&q=80"
+            },
+            { 
+                name: "Париж", country: "Франция", lat: 48.85, lng: 2.35, 
+                desc: "Город любви, Эйфелева башня и лучшие круассаны.",
+                img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80"
+            },
+            { 
+                name: "Токио", country: "Япония", lat: 35.68, lng: 139.69, 
+                desc: "Киберпанк реальность, храмы и суши.",
+                img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80"
+            },
+            { 
+                name: "Нью-Йорк", country: "США", lat: 40.71, lng: -74.00, 
+                desc: "Большое яблоко, Таймс-сквер и Статуя Свободы.",
+                img: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=800&q=80"
+            },
+            { 
+                name: "Дубай", country: "ОАЭ", lat: 25.20, lng: 55.27, 
+                desc: "Роскошь пустыни, небоскребы и золотые рынки.",
+                img: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80"
+            },
+             { 
+                name: "Рим", country: "Италия", lat: 41.90, lng: 12.49, 
+                desc: "Колизей, Ватикан и настоящая паста.",
+                img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80"
+            }
         ];
 
         let map, markersLayer;
@@ -169,11 +212,11 @@
         }
 
         function initMap() {
+            // Light Theme Map (CartoDB Positron)
             map = L.map('map').setView([20, 0], 2);
             
-            // Стандартная карта OpenStreetMap (всегда работает)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '' 
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
             }).addTo(map);
 
             renderMarkers(cities);
@@ -184,43 +227,27 @@
             markersLayer = L.layerGroup().addTo(map);
 
             dataList.forEach(city => {
-                // Красный маркер по умолчанию
+                // Standard Red Pin Icon
                 const marker = L.marker([city.lat, city.lng]).addTo(markersLayer);
                 
-                // Создаем попап
+                // Create Rich Popup Content
                 const popupContent = `
-                    <div class="custom-popup">
-                        <div class="popup-city">${city.name}</div>
-                        <div class="popup-country">${city.country}</div>
-                        <a href="#" onclick="buildRoute(${city.lat}, ${city.lng}); return false;" class="popup-btn">Построить маршрут</a>
+                    <div class="popup-inner">
+                        <img src="${city.img}" alt="${city.name}" class="popup-img">
+                        <div class="popup-info">
+                            <h3 class="popup-title">${city.name}</h3>
+                            <p class="popup-desc">${city.desc}</p>
+                            <a href="#" onclick="buildRoute(${city.lat}, ${city.lng}); return false;" class="popup-btn">🚀 Построить маршрут</a>
+                        </div>
                     </div>
                 `;
                 
-                marker.bindPopup(popupContent, { maxWidth: 300 });
+                marker.bindPopup(popupContent, { maxWidth: 300, minWidth: 280 });
             });
         }
 
         function buildRoute(lat, lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-        }
-
-        function randomDestination() {
-            const randomIndex = Math.floor(Math.random() * cities.length);
-            const targetCity = cities[randomIndex];
-            
-            // Вибрация телефона (если поддерживает)
-            if(navigator.vibrate) navigator.vibrate(50);
-
-            map.flyTo([targetCity.lat, targetCity.lng], 8, { duration: 2 });
-            
-            // Открыть попап через секунду после перелета
-            setTimeout(() => {
-                markersLayer.eachLayer(layer => {
-                    if(layer.getLatLng().lat === targetCity.lat && layer.getLatLng().lng === targetCity.lng) {
-                        layer.openPopup();
-                    }
-                });
-            }, 2000);
         }
 
         function handleSearch(e) {
@@ -232,10 +259,11 @@
                 renderMarkers(filtered);
                 
                 if(filtered.length > 0) {
+                     // Zoom to first result
                      const first = filtered[0];
                      map.flyTo([first.lat, first.lng], 10);
                 } else {
-                    alert("Город не найден.");
+                    alert("Не нашел такой город в списке.");
                 }
             }
         }
