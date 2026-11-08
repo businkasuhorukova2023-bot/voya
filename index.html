@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { overflow: hidden; height: 100vh; width: 100vw; background: #000; }
 
-        /* ===== ЗАСТАВКА С 3D ЗЕМЛЁЙ ===== */
+        /* ===== ЗАСТАВКА ===== */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(ellipse at center, #1a2a6c 0%, #0a0a2e 70%, #000 100%);
@@ -17,14 +17,14 @@
             z-index: 9999; transition: opacity 1s ease;
         }
 
-        #earth-canvas {
-            width: 280px; height: 280px;
-            filter: drop-shadow(0 0 40px rgba(100,180,255,0.6));
+        #earth-container {
+            width: 300px; height: 300px;
+            margin-bottom: 30px;
         }
 
         .logo {
             font-size: 3.5rem; font-weight: 900; color: white;
-            letter-spacing: 8px; margin-top: 30px;
+            letter-spacing: 8px;
             text-shadow: 0 0 30px rgba(100,180,255,0.8);
         }
 
@@ -52,12 +52,14 @@
         #map { width: 100%; height: 100%; }
         .leaflet-control-attribution { display: none !important; }
 
-        /* ===== ПОИСК ===== */
+        /* ===== ПОИСК ВНИЗУ ЭКРАНА ===== */
         .search-box {
             position: absolute;
-            top: 20px; left: 50%;
+            bottom: 20px;
+            left: 50%;
             transform: translateX(-50%);
-            width: 92%; max-width: 500px;
+            width: 90%;
+            max-width: 450px;
             background: white;
             border-radius: 30px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -74,18 +76,55 @@
             font-size: 1rem;
             border-radius: 25px;
             background: #f5f5f5;
+            min-width: 0;
         }
 
         .search-btn {
-            padding: 12px 25px;
+            padding: 12px 20px;
             background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
             color: white; border: none; border-radius: 25px;
-            font-size: 1rem; font-weight: 700;
+            font-size: 1.2rem;
             cursor: pointer;
-            white-space: nowrap;
+            min-width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .search-btn:active { transform: scale(0.95); }
+
+        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
+        @media (max-width: 600px) {
+            .search-box {
+                width: 95%;
+                bottom: 15px;
+                padding: 6px;
+            }
+            
+            .search-input {
+                padding: 10px 15px;
+                font-size: 0.95rem;
+            }
+            
+            .search-btn {
+                padding: 10px 15px;
+                min-width: 45px;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .start-btn {
+                padding: 15px 35px;
+                font-size: 1rem;
+            }
+            
+            #earth-container {
+                width: 220px;
+                height: 220px;
+            }
+        }
 
         /* ===== ПОПАП ===== */
         .city-card { text-align: center; padding: 15px; min-width: 220px; }
@@ -106,7 +145,7 @@
 
     <!-- ЗАСТАВКА С 3D ЗЕМЛЁЙ -->
     <div id="splash">
-        <canvas id="earth-canvas"></canvas>
+        <div id="earth-container"></div>
         <div class="logo">VOYA</div>
         <div class="tagline">МИР У ТВОИХ НОГ</div>
         <button class="start-btn" onclick="startApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
@@ -117,53 +156,56 @@
         <div id="map"></div>
         <div class="search-box">
             <input type="text" class="search-input" id="cityInput" placeholder="Введите любой город мира...">
-            <button class="search-btn" onclick="findCity()">🔍 НАЙТИ</button>
+            <button class="search-btn" onclick="findCity()">🔍</button>
         </div>
     </div>
 
-    <!-- Three.js для 3D Земли -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ===== 3D ЗЕМЛЯ (НАСТОЯЩЕЕ ВРАЩЕНИЕ) =====
-        let scene, camera, renderer, earthMesh;
+        // ===== НАСТОЯЩАЯ 3D ЗЕМЛЯ =====
+        let scene, camera, renderer, earth;
 
         function initEarth() {
-            const canvas = document.getElementById('earth-canvas');
+            const container = document.getElementById('earth-container');
+            
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-            renderer.setSize(280, 280);
+            camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(300, 300);
+            container.appendChild(renderer.domElement);
 
             const geometry = new THREE.SphereGeometry(5, 64, 64);
             const textureLoader = new THREE.TextureLoader();
             const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
+            
             const material = new THREE.MeshPhongMaterial({
                 map: earthTexture,
-                specular: new THREE.Color('grey'),
-                shininess: 10
+                specular: new THREE.Color(0x333333),
+                shininess: 5
             });
 
-            earthMesh = new THREE.Mesh(geometry, material);
-            scene.add(earthMesh);
+            earth = new THREE.Mesh(geometry, material);
+            scene.add(earth);
 
-            const ambientLight = new THREE.AmbientLight(0x404040);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(5, 3, 5);
             scene.add(directionalLight);
 
-            camera.position.z = 13;
+            camera.position.z = 15;
 
             function animate() {
                 requestAnimationFrame(animate);
-                if (earthMesh) earthMesh.rotation.y += 0.003; // НАСТОЯЩЕЕ ВРАЩЕНИЕ
+                earth.rotation.y += 0.002;
                 renderer.render(scene, camera);
             }
             animate();
         }
 
-        // Запуск 3D Земли сразу
         initEarth();
 
         // ===== ПЕРЕХОД К КАРТЕ =====
@@ -186,7 +228,7 @@
             }).addTo(map);
         }
 
-        // ===== ПОИСК ЛЮБОГО ГОРОДА МИРА =====
+        // ===== ПОИСК ЛЮБОГО ГОРОДА =====
         function findCity() {
             const query = document.getElementById('cityInput').value.trim();
             if (query.length < 2) {
