@@ -15,34 +15,38 @@
             background: radial-gradient(ellipse at center, #1a2a6c 0%, #0a0a2e 70%, #000 100%);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; transition: opacity 1s ease;
+            padding: 20px;
         }
 
         #earth-container {
-            width: 300px; height: 300px;
-            margin-bottom: 30px;
+            width: 250px; height: 250px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .logo {
-            font-size: 3.5rem; font-weight: 900; color: white;
-            letter-spacing: 8px;
+            font-size: 3rem; font-weight: 900; color: white;
+            letter-spacing: 6px;
             text-shadow: 0 0 30px rgba(100,180,255,0.8);
+            margin-bottom: 8px;
         }
 
         .tagline {
-            color: #8ab4f8; font-size: 1.1rem; margin-top: 10px;
+            color: #8ab4f8; font-size: 1rem;
             letter-spacing: 2px;
+            margin-bottom: 30px;
         }
 
         .start-btn {
-            margin-top: 40px;
-            padding: 18px 50px;
+            padding: 16px 40px;
             background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
             color: white; border: none; border-radius: 50px;
-            font-size: 1.2rem; font-weight: 700;
+            font-size: 1.1rem; font-weight: 700;
             letter-spacing: 2px; text-transform: uppercase;
             cursor: pointer;
             box-shadow: 0 10px 40px rgba(255,94,98,0.6);
             transition: all 0.3s ease;
+            max-width: 90%;
         }
 
         .start-btn:active { transform: scale(0.95); }
@@ -52,14 +56,13 @@
         #map { width: 100%; height: 100%; }
         .leaflet-control-attribution { display: none !important; }
 
-        /* ===== ПОИСК ВНИЗУ ЭКРАНА ===== */
+        /* ===== ПОИСК ===== */
         .search-box {
             position: absolute;
-            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 450px;
+            width: 92%;
+            max-width: 500px;
             background: white;
             border-radius: 30px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
@@ -67,6 +70,20 @@
             display: flex;
             gap: 8px;
             z-index: 1000;
+        }
+
+        /* На компьютере — поиск сверху */
+        @media (min-width: 768px) {
+            .search-box {
+                top: 20px;
+            }
+        }
+
+        /* На телефоне — поиск снизу, но выше панели браузера */
+        @media (max-width: 767px) {
+            .search-box {
+                bottom: 90px;
+            }
         }
 
         .search-input {
@@ -83,59 +100,49 @@
             padding: 12px 20px;
             background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
             color: white; border: none; border-radius: 25px;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             cursor: pointer;
-            min-width: 50px;
+            min-width: 55px;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .search-btn:active { transform: scale(0.95); }
 
         /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
         @media (max-width: 600px) {
-            .search-box {
-                width: 95%;
-                bottom: 15px;
-                padding: 6px;
-            }
-            
-            .search-input {
-                padding: 10px 15px;
-                font-size: 0.95rem;
-            }
-            
-            .search-btn {
-                padding: 10px 15px;
-                min-width: 45px;
+            #earth-container {
+                width: 200px;
+                height: 200px;
             }
             
             .logo {
-                font-size: 2.5rem;
+                font-size: 2.3rem;
+                letter-spacing: 4px;
+            }
+            
+            .tagline {
+                font-size: 0.9rem;
             }
             
             .start-btn {
-                padding: 15px 35px;
+                padding: 14px 30px;
                 font-size: 1rem;
-            }
-            
-            #earth-container {
-                width: 220px;
-                height: 220px;
             }
         }
 
         /* ===== ПОПАП ===== */
         .city-card { text-align: center; padding: 15px; min-width: 220px; }
-        .city-card h2 { font-size: 1.4rem; color: #2C3E50; margin-bottom: 5px; }
-        .city-card p { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
+        .city-card h2 { font-size: 1.3rem; color: #2C3E50; margin-bottom: 5px; }
+        .city-card p { font-size: 0.85rem; color: #666; margin-bottom: 15px; }
         .route-btn {
             display: block; width: 100%;
             padding: 12px;
             background: #2C3E50; color: white;
             border: none; border-radius: 10px;
-            font-size: 1rem; font-weight: 600;
+            font-size: 0.95rem; font-weight: 600;
             cursor: pointer;
         }
         .route-btn:active { background: #FF5E62; }
@@ -169,11 +176,12 @@
 
         function initEarth() {
             const container = document.getElementById('earth-container');
+            const size = Math.min(container.clientWidth, container.clientHeight);
             
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(300, 300);
+            renderer.setSize(size, size);
             container.appendChild(renderer.domElement);
 
             const geometry = new THREE.SphereGeometry(5, 64, 64);
