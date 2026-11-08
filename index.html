@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { overflow: hidden; height: 100vh; width: 100vw; background: #000; }
 
-        /* ===== ЗАСТАВКА ===== */
+        /* ===== ЗАСТАВКА С 3D ЗЕМЛЁЙ ===== */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(ellipse at center, #1a2a6c 0%, #0a0a2e 70%, #000 100%);
@@ -17,55 +17,14 @@
             z-index: 9999; transition: opacity 1s ease;
         }
 
-        .earth {
-            width: 220px; height: 220px;
-            border-radius: 50%;
-            background: 
-                radial-gradient(circle at 30% 30%, #4a90e2 0%, #2c5aa0 40%, #1a3d6e 70%, #0d1f3d 100%);
-            box-shadow: 
-                inset -20px -20px 50px rgba(0,0,0,0.8),
-                inset 10px 10px 30px rgba(100,180,255,0.3),
-                0 0 60px rgba(74,144,226,0.5),
-                0 0 100px rgba(74,144,226,0.3);
-            position: relative;
-            animation: rotate 20s linear infinite;
-            overflow: hidden;
-        }
-
-        /* Материки через градиенты */
-        .earth::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            background: 
-                radial-gradient(ellipse 40% 30% at 25% 35%, #2d5016 0%, transparent 70%),
-                radial-gradient(ellipse 30% 40% at 60% 40%, #3d6b1f 0%, transparent 70%),
-                radial-gradient(ellipse 35% 25% at 70% 65%, #4a7c23 0%, transparent 70%),
-                radial-gradient(ellipse 25% 35% at 35% 70%, #2d5016 0%, transparent 70%),
-                radial-gradient(ellipse 20% 20% at 80% 30%, #3d6b1f 0%, transparent 70%);
-            opacity: 0.8;
-        }
-
-        /* Облака */
-        .earth::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 50%;
-            background: 
-                radial-gradient(ellipse 50% 15% at 40% 25%, rgba(255,255,255,0.4) 0%, transparent 70%),
-                radial-gradient(ellipse 40% 10% at 65% 55%, rgba(255,255,255,0.3) 0%, transparent 70%);
-        }
-
-        @keyframes rotate {
-            0% { transform: rotateY(0deg); }
-            100% { transform: rotateY(360deg); }
+        #earth-canvas {
+            width: 280px; height: 280px;
+            filter: drop-shadow(0 0 40px rgba(100,180,255,0.6));
         }
 
         .logo {
             font-size: 3.5rem; font-weight: 900; color: white;
-            letter-spacing: 8px; margin-top: 40px;
+            letter-spacing: 8px; margin-top: 30px;
             text-shadow: 0 0 30px rgba(100,180,255,0.8);
         }
 
@@ -75,7 +34,7 @@
         }
 
         .start-btn {
-            margin-top: 50px;
+            margin-top: 40px;
             padding: 18px 50px;
             background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
             color: white; border: none; border-radius: 50px;
@@ -93,7 +52,7 @@
         #map { width: 100%; height: 100%; }
         .leaflet-control-attribution { display: none !important; }
 
-        /* ===== ПОИСК (БОЛЬШОЙ, ДЛЯ ТЕЛЕФОНА) ===== */
+        /* ===== ПОИСК ===== */
         .search-box {
             position: absolute;
             top: 20px; left: 50%;
@@ -128,10 +87,8 @@
 
         .search-btn:active { transform: scale(0.95); }
 
-        /* ===== ПОПАП ГОРОДА ===== */
-        .city-card {
-            text-align: center; padding: 15px; min-width: 220px;
-        }
+        /* ===== ПОПАП ===== */
+        .city-card { text-align: center; padding: 15px; min-width: 220px; }
         .city-card h2 { font-size: 1.4rem; color: #2C3E50; margin-bottom: 5px; }
         .city-card p { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
         .route-btn {
@@ -147,9 +104,9 @@
 </head>
 <body>
 
-    <!-- ЗАСТАВКА -->
+    <!-- ЗАСТАВКА С 3D ЗЕМЛЁЙ -->
     <div id="splash">
-        <div class="earth"></div>
+        <canvas id="earth-canvas"></canvas>
         <div class="logo">VOYA</div>
         <div class="tagline">МИР У ТВОИХ НОГ</div>
         <button class="start-btn" onclick="startApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
@@ -158,15 +115,58 @@
     <!-- ПРИЛОЖЕНИЕ -->
     <div id="app">
         <div id="map"></div>
-        
         <div class="search-box">
-            <input type="text" class="search-input" id="cityInput" placeholder="Введите город...">
+            <input type="text" class="search-input" id="cityInput" placeholder="Введите любой город мира...">
             <button class="search-btn" onclick="findCity()">🔍 НАЙТИ</button>
         </div>
     </div>
 
+    <!-- Three.js для 3D Земли -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // ===== 3D ЗЕМЛЯ (НАСТОЯЩЕЕ ВРАЩЕНИЕ) =====
+        let scene, camera, renderer, earthMesh;
+
+        function initEarth() {
+            const canvas = document.getElementById('earth-canvas');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(280, 280);
+
+            const geometry = new THREE.SphereGeometry(5, 64, 64);
+            const textureLoader = new THREE.TextureLoader();
+            const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
+            const material = new THREE.MeshPhongMaterial({
+                map: earthTexture,
+                specular: new THREE.Color('grey'),
+                shininess: 10
+            });
+
+            earthMesh = new THREE.Mesh(geometry, material);
+            scene.add(earthMesh);
+
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+            directionalLight.position.set(5, 3, 5);
+            scene.add(directionalLight);
+
+            camera.position.z = 13;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (earthMesh) earthMesh.rotation.y += 0.003; // НАСТОЯЩЕЕ ВРАЩЕНИЕ
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // Запуск 3D Земли сразу
+        initEarth();
+
+        // ===== ПЕРЕХОД К КАРТЕ =====
         let map, currentMarker;
 
         function startApp() {
@@ -186,6 +186,7 @@
             }).addTo(map);
         }
 
+        // ===== ПОИСК ЛЮБОГО ГОРОДА МИРА =====
         function findCity() {
             const query = document.getElementById('cityInput').value.trim();
             if (query.length < 2) {
@@ -193,7 +194,6 @@
                 return;
             }
 
-            // Используем Nominatim API для поиска любого города мира
             fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=ru`)
                 .then(response => response.json())
                 .then(data => {
@@ -205,9 +205,8 @@
                         const country = city.display_name.split(',').slice(-2,-1)[0] || '';
 
                         if (currentMarker) map.removeLayer(currentMarker);
-                        
                         currentMarker = L.marker([lat, lng]).addTo(map);
-                        
+
                         const popupContent = `
                             <div class="city-card">
                                 <h2>${name}</h2>
@@ -215,7 +214,7 @@
                                 <button class="route-btn" onclick="buildRoute(${lat}, ${lng})">🚗 ПОСТРОИТЬ МАРШРУТ</button>
                             </div>
                         `;
-                        
+
                         currentMarker.bindPopup(popupContent, { maxWidth: 300 }).openPopup();
                         map.flyTo([lat, lng], 12, { duration: 2 });
                     } else {
