@@ -10,11 +10,8 @@
         body { overflow: hidden; height: 100vh; width: 100vw; }
         
         #map { width: 100%; height: 100%; }
-        
-        /* Скрываем атрибуты карты */
         .leaflet-control-attribution { display: none !important; }
         
-        /* Поисковая строка - ВНИЗУ, не мешает кнопкам зума */
         .search-container {
             position: absolute;
             bottom: 30px;
@@ -32,7 +29,11 @@
             gap: 10px;
         }
         
-        .search-icon { font-size: 1.2rem; }
+        .search-icon { 
+            font-size: 1.5rem; 
+            cursor: pointer;
+            user-select: none;
+        }
         
         .search-input {
             flex-grow: 1;
@@ -42,11 +43,7 @@
             color: #333;
         }
         
-        /* Попап города */
-        .city-popup {
-            text-align: center;
-            padding: 10px;
-        }
+        .city-popup { text-align: center; padding: 10px; }
         .city-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; }
         .city-country { font-size: 0.9rem; color: #666; margin-bottom: 10px; }
         .btn-route {
@@ -65,15 +62,13 @@
 
     <div id="map"></div>
     
-    <!-- Поиск внизу -->
     <div class="search-container">
-        <span class="search-icon">🔍</span>
-        <input type="text" class="search-input" id="citySearch" placeholder="Найти город (например, Геленджик)...">
+        <span class="search-icon" onclick="doSearch()">🔍</span>
+        <input type="text" class="search-input" id="citySearch" placeholder="Найти город (например, Геленджик)..." onkeypress="handleEnter(event)">
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // База городов
         const cities = [
             { name: "Москва", country: "Россия", lat: 55.7558, lng: 37.6173 },
             { name: "Санкт-Петербург", country: "Россия", lat: 59.9343, lng: 30.3351 },
@@ -81,6 +76,7 @@
             { name: "Новороссийск", country: "Россия", lat: 44.7230, lng: 37.7686 },
             { name: "Геленджик", country: "Россия", lat: 44.5619, lng: 38.0769 },
             { name: "Ростов-на-Дону", country: "Россия", lat: 47.2357, lng: 39.7015 },
+            { name: "Ставрополь", country: "Россия", lat: 45.0428, lng: 41.9734 },
             { name: "Грозный", country: "Россия", lat: 43.3180, lng: 45.6986 },
             { name: "Казань", country: "Россия", lat: 55.7887, lng: 49.1221 },
             { name: "Владивосток", country: "Россия", lat: 43.1155, lng: 131.8855 },
@@ -93,7 +89,6 @@
             { name: "Барселона", country: "Испания", lat: 41.3851, lng: 2.1734 }
         ];
 
-        // Инициализация карты - ЦВЕТНАЯ OpenStreetMap
         const map = L.map('map').setView([20, 0], 2);
         
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -102,26 +97,31 @@
 
         let currentMarker = null;
 
-        // Функция поиска - работает сразу при вводе
-        document.getElementById('citySearch').addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase().trim();
-            
+        // Поиск по клику на лупу
+        function doSearch() {
+            const query = document.getElementById('citySearch').value.toLowerCase().trim();
+            searchCity(query);
+        }
+
+        // Поиск по Enter
+        function handleEnter(e) {
+            if (e.key === 'Enter') {
+                doSearch();
+            }
+        }
+
+        // Функция поиска
+        function searchCity(query) {
             if (query.length < 2) {
-                // Если стерли текст - убираем маркер
-                if (currentMarker) {
-                    map.removeLayer(currentMarker);
-                    currentMarker = null;
-                }
+                alert("Введите хотя бы 2 буквы");
                 return;
             }
 
             const found = cities.find(c => c.name.toLowerCase().includes(query));
             
             if (found) {
-                // Удаляем старый маркер
                 if (currentMarker) map.removeLayer(currentMarker);
                 
-                // Добавляем новый
                 currentMarker = L.marker([found.lat, found.lng]).addTo(map);
                 
                 const popupContent = `
@@ -133,11 +133,11 @@
                 `;
                 
                 currentMarker.bindPopup(popupContent).openPopup();
-                
-                // Плавно летим к городу
                 map.flyTo([found.lat, found.lng], 10, { duration: 1.5 });
+            } else {
+                alert("Город '" + query + "' не найден. Попробуйте: Москва, Сочи, Геленджик, Ростов, Ставрополь, Грозный");
             }
-        });
+        }
 
         function buildRoute(lat, lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
