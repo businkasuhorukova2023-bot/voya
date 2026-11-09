@@ -1,0 +1,15 @@
+{
+  "name": "Voya - Мир у твоих ног",
+  "short_name": "Voya",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#02040a",
+  "theme_color": "#02040a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
