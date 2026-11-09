@@ -50,7 +50,7 @@
             border: 1px solid rgba(56, 189, 248, 0.5);
             border-radius: 30px; box-shadow: 0 5px 25px rgba(0,0,0,0.6);
             padding: 8px; display: flex; gap: 8px; z-index: 1000; 
-            top: 20px; /* Теперь всегда сверху */
+            top: 20px;
         }
 
         .search-input { 
@@ -111,7 +111,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // ==========================================
-        // 1. 3D ГЛОБУС (ТОЛЬКО ШАР И ТОЧКИ, БЕЗ ЛИНИЙ)
+        // 1. 3D ГЛОБУС (ТОЛЬКО ШАР И ТОЧКИ)
         // ==========================================
         const container = document.getElementById('globe-container');
         const scene = new THREE.Scene();
@@ -122,15 +122,11 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container.appendChild(renderer.domElement);
 
-        // Сетка глобуса
         const geometry = new THREE.SphereGeometry(3, 40, 40);
-        const material = new THREE.MeshBasicMaterial({ 
-            color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.15
-        });
+        const material = new THREE.MeshBasicMaterial({ color: 0x00f3ff, wireframe: true, transparent: true, opacity: 0.15 });
         const globe = new THREE.Mesh(geometry, material);
         scene.add(globe);
 
-        // Светящиеся точки на глобусе
         const particlesGeo = new THREE.BufferGeometry();
         const particlesCount = 400;
         const posArray = new Float32Array(particlesCount * 3);
@@ -145,9 +141,7 @@
         }
         
         particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        const particlesMat = new THREE.PointsMaterial({
-            size: 0.06, color: 0xbc13fe, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
-        });
+        const particlesMat = new THREE.PointsMaterial({ size: 0.06, color: 0xbc13fe, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
         const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
         scene.add(particlesMesh);
 
@@ -169,7 +163,7 @@
 
 
         // ==========================================
-        // 2. КАРТА (С ГОРОДАМИ И УЛИЦАМИ)
+        // 2. КАРТА (ИСТИННО ТЕМНАЯ, С ГОРОДАМИ)
         // ==========================================
         let map, currentMarker;
 
@@ -185,12 +179,16 @@
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([20, 0], 3);
             
-            // МЕНЯЕМ СЛОЙ НА CARTO (Здесь есть и страны, и города, и улицы при зуме)
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                maxZoom: 19
+            // 1. Подложка (темная земля и вода, без ключей и фильтров)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 16
             }).addTo(map);
 
-            // Кнопка "+" и "-" для зума в правом нижнем углу
+            // 2. Слой с подписями городов и стран (чтобы были видны названия при приближении)
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 16
+            }).addTo(map);
+
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
             // Поиск локации пользователя при старте
@@ -252,11 +250,9 @@
                 .catch(() => { showLoading(false); alert('Ошибка'); });
         }
 
-        // Функция добавления метки с фото
         function dropPin(lat, lng, name, country) {
             if (currentMarker) map.removeLayer(currentMarker);
             
-            // Фото города
             const imgUrl = `https://loremflickr.com/300/200/${encodeURIComponent(name)},city/all`;
 
             const popupContent = `
