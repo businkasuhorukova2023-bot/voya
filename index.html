@@ -4,219 +4,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Voya | Мир У Твоих Ног</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48ZGVmcz48cmFkaWFsR3JhZGllbnQgaWQ9ImIiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMxYTJhNmMiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMDAiLz48L3JhZGlhbEdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSJ1cmwoI2IpIi8+PGNpcmNsZSBjeD0iOTYiIGN5PSI5MCIgcj0iNTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzRhOTBlMiIgc3Ryb2tlLXdpZHRoPSIzIi8+PGNpcmNsZSBjeD0iOTYiIGN5PSI5MCIgcj0iNTAiIGZpbGw9IiMyZDZiMWYiIG9wYWNpdHk9IjAuNCIvPjx0ZXh0IHg9Ijk2IiB5PSIxNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIyNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5WT1lBPC90ZXh0Pjwvc3ZnPg==">
+    <meta name="theme-color" content="#02040a">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { overflow: hidden; height: 100vh; width: 100vw; background: #000; }
+        body { overflow: hidden; height: 100vh; width: 100vw; background: #02040a; }
 
-        /* ===== ЗАСТАВКА ===== */
+        /* ЗАСТАВКА С 3D ГЛОБУСОМ */
         #splash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(ellipse at center, #1a2a6c 0%, #0a0a2e 70%, #000 100%);
+            background: #02040a;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 9999; transition: opacity 1s ease;
-            padding: 20px;
         }
 
-        #earth-container {
-            width: 250px; height: 250px;
-            margin-bottom: 20px;
-            flex-shrink: 0;
+        /* Контейнер для 3D-глобуса */
+        #globe-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
         }
 
-        .logo {
-            font-size: 3rem; font-weight: 900; color: white;
-            letter-spacing: 6px;
-            text-shadow: 0 0 30px rgba(100,180,255,0.8);
-            margin-bottom: 8px;
+        /* Текст поверх глобуса */
+        .splash-content {
+            position: relative; z-index: 2;
+            display: flex; flex-direction: column; align-items: center;
+            pointer-events: none; /* Чтобы можно было крутить глобус, если захочется */
         }
 
-        .tagline {
-            color: #8ab4f8; font-size: 1rem;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
-        }
-
+        .logo { font-size: 3.5rem; font-weight: 900; color: white; letter-spacing: 8px; text-shadow: 0 0 30px rgba(0,243,255,0.8); margin-bottom: 5px; }
+        .tagline { color: #38bdf8; font-size: 1.1rem; letter-spacing: 3px; margin-bottom: 40px; text-transform: uppercase; }
+        
         .start-btn {
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
-            color: white; border: none; border-radius: 50px;
-            font-size: 1.1rem; font-weight: 700;
-            letter-spacing: 2px; text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 0 10px 40px rgba(255,94,98,0.6);
-            transition: all 0.3s ease;
-            max-width: 90%;
+            pointer-events: auto;
+            padding: 18px 45px; background: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
+            color: white; border: none; border-radius: 50px; font-size: 1.1rem; font-weight: 800;
+            letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 30px rgba(0,243,255,0.5);
+            text-transform: uppercase; transition: 0.3s;
         }
-
         .start-btn:active { transform: scale(0.95); }
 
-        /* ===== КАРТА ===== */
+        /* КАРТА */
         #app { display: none; width: 100%; height: 100%; position: relative; }
-        #map { width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; background: #1e293b; cursor: crosshair; }
         .leaflet-control-attribution { display: none !important; }
 
-        /* ===== ПОИСК ===== */
+        /* ПОИСК */
         .search-box {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 92%;
-            max-width: 500px;
-            background: white;
-            border-radius: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            padding: 8px;
-            display: flex;
-            gap: 8px;
-            z-index: 1000;
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 500px; background: rgba(30, 41, 59, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 30px; box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+            padding: 8px; display: flex; gap: 8px; z-index: 1000; top: 20px;
         }
 
-        /* На компьютере — поиск сверху */
-        @media (min-width: 768px) {
-            .search-box {
-                top: 20px;
-            }
-        }
-
-        /* На телефоне — поиск снизу, но выше панели браузера */
         @media (max-width: 767px) {
-            .search-box {
-                bottom: 90px;
-            }
+            .search-box { top: auto; bottom: calc(40px + env(safe-area-inset-bottom)); }
         }
 
-        .search-input {
-            flex: 1;
-            border: none; outline: none;
-            padding: 12px 20px;
-            font-size: 1rem;
-            border-radius: 25px;
-            background: #f5f5f5;
-            min-width: 0;
-        }
+        .search-input { flex: 1; border: none; outline: none; padding: 12px 20px; font-size: 1rem; border-radius: 25px; background: rgba(0,0,0,0.5); color: #fff; min-width: 0; }
+        .search-input::placeholder { color: #94a3b8; }
+        .search-btn { padding: 12px 20px; background: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%); color: white; border: none; border-radius: 25px; font-size: 1.3rem; cursor: pointer; flex-shrink: 0; }
 
-        .search-btn {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #FF5E62 0%, #FF9966 100%);
-            color: white; border: none; border-radius: 25px;
-            font-size: 1.3rem;
-            cursor: pointer;
-            min-width: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+        /* КАРТОЧКА */
+        .city-card { text-align: center; padding: 0; min-width: 230px; overflow: hidden; border-radius: 12px; background: #0f172a; }
+        .city-img { width: 100%; height: 140px; object-fit: cover; }
+        .city-info { padding: 15px; }
+        .city-card h2 { font-size: 1.3rem; color: #fff; margin-bottom: 5px; }
+        .city-card p { font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; }
+        .route-btn { display: block; width: 100%; padding: 12px; background: linear-gradient(90deg, #00f3ff, #bc13fe); color: #000; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 800; cursor: pointer; text-transform: uppercase;}
 
-        .search-btn:active { transform: scale(0.95); }
-
-        /* ===== МОБИЛЬНАЯ АДАПТАЦИЯ ===== */
-        @media (max-width: 600px) {
-            #earth-container {
-                width: 200px;
-                height: 200px;
-            }
-            
-            .logo {
-                font-size: 2.3rem;
-                letter-spacing: 4px;
-            }
-            
-            .tagline {
-                font-size: 0.9rem;
-            }
-            
-            .start-btn {
-                padding: 14px 30px;
-                font-size: 1rem;
-            }
+        /* ИНДИКАТОР ЗАГРУЗКИ */
+        .loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); color: #38bdf8; padding: 15px 25px; border-radius: 15px;
+            font-size: 1rem; z-index: 2000; display: none; text-align: center;
+            border: 1px solid #38bdf8;
         }
-
-        /* ===== ПОПАП ===== */
-        .city-card { text-align: center; padding: 15px; min-width: 220px; }
-        .city-card h2 { font-size: 1.3rem; color: #2C3E50; margin-bottom: 5px; }
-        .city-card p { font-size: 0.85rem; color: #666; margin-bottom: 15px; }
-        .route-btn {
-            display: block; width: 100%;
-            padding: 12px;
-            background: #2C3E50; color: white;
-            border: none; border-radius: 10px;
-            font-size: 0.95rem; font-weight: 600;
-            cursor: pointer;
-        }
-        .route-btn:active { background: #FF5E62; }
     </style>
 </head>
 <body>
 
-    <!-- ЗАСТАВКА С 3D ЗЕМЛЁЙ -->
     <div id="splash">
-        <div id="earth-container"></div>
-        <div class="logo">VOYA</div>
-        <div class="tagline">МИР У ТВОИХ НОГ</div>
-        <button class="start-btn" onclick="startApp()">НАЧАТЬ ПУТЕШЕСТВИЕ</button>
-    </div>
-
-    <!-- ПРИЛОЖЕНИЕ -->
-    <div id="app">
-        <div id="map"></div>
-        <div class="search-box">
-            <input type="text" class="search-input" id="cityInput" placeholder="Введите любой город мира...">
-            <button class="search-btn" onclick="findCity()">🔍</button>
+        <div id="globe-container"></div>
+        <div class="splash-content">
+            <div class="logo">VOYA</div>
+            <div class="tagline">Мир у твоих ног</div>
+            <button class="start-btn" onclick="startApp()">Начать</button>
         </div>
     </div>
 
-    <!-- Three.js -->
+    <div id="app">
+        <div id="map"></div>
+        <div class="search-box">
+            <input type="text" class="search-input" id="cityInput" placeholder="Введите город...">
+            <button class="search-btn" onclick="findCity()">🔍</button>
+        </div>
+        <div class="loading" id="loading">⏳ Ищем...</div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // ===== НАСТОЯЩАЯ 3D ЗЕМЛЯ =====
-        let scene, camera, renderer, earth;
+        // ==========================================
+        // 1. СОЗДАНИЕ 3D ГЛОБУСА (THREE.JS)
+        // ==========================================
+        const container = document.getElementById('globe-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Оптимизация для телефонов
+        container.appendChild(renderer.domElement);
 
-        function initEarth() {
-            const container = document.getElementById('earth-container');
-            const size = Math.min(container.clientWidth, container.clientHeight);
+        // Создаем каркас (сетку) глобуса
+        const geometry = new THREE.SphereGeometry(3, 32, 32);
+        const material = new THREE.MeshBasicMaterial({ 
+            color: 0x00f3ff, // Неоново-голубой
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const globe = new THREE.Mesh(geometry, material);
+        scene.add(globe);
+
+        // Создаем светящиеся точки (города/данные)
+        const particlesGeo = new THREE.BufferGeometry();
+        const particlesCount = 300;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for(let i = 0; i < particlesCount * 3; i++) {
+            // Раскидываем точки по сфере
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            const r = 3.05; // Чуть больше радиуса глобуса
             
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(size, size);
-            container.appendChild(renderer.domElement);
-
-            const geometry = new THREE.SphereGeometry(5, 64, 64);
-            const textureLoader = new THREE.TextureLoader();
-            const earthTexture = textureLoader.load('https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/planets/earth_atmos_2048.jpg');
-            
-            const material = new THREE.MeshPhongMaterial({
-                map: earthTexture,
-                specular: new THREE.Color(0x333333),
-                shininess: 5
-            });
-
-            earth = new THREE.Mesh(geometry, material);
-            scene.add(earth);
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(5, 3, 5);
-            scene.add(directionalLight);
-
-            camera.position.z = 15;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                earth.rotation.y += 0.002;
-                renderer.render(scene, camera);
-            }
-            animate();
+            posArray[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+            posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            posArray[i * 3 + 2] = r * Math.cos(phi);
         }
+        
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMat = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0xbc13fe, // Фиолетовый
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+        const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particlesMesh);
 
-        initEarth();
+        // Добавляем орбиты (кольца)
+        const ringGeo = new THREE.TorusGeometry(4.5, 0.02, 16, 100);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xbc13fe, transparent: true, opacity: 0.5 });
+        const ring1 = new THREE.Mesh(ringGeo, ringMat);
+        ring1.rotation.x = Math.PI / 2;
+        scene.add(ring1);
 
-        // ===== ПЕРЕХОД К КАРТЕ =====
+        const ring2 = new THREE.Mesh(ringGeo, ringMat);
+        ring2.rotation.x = Math.PI / 3;
+        ring2.rotation.y = Math.PI / 4;
+        scene.add(ring2);
+
+        camera.position.z = 8;
+
+        // Анимация вращения
+        function animate() {
+            requestAnimationFrame(animate);
+            globe.rotation.y += 0.003;
+            particlesMesh.rotation.y += 0.003;
+            ring1.rotation.z += 0.001;
+            ring2.rotation.z -= 0.002;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Адаптация под изменение размера экрана
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+
+        // ==========================================
+        // 2. ЛОГИКА КАРТЫ И ПРИЛОЖЕНИЯ
+        // ==========================================
         let map, currentMarker;
 
         function startApp() {
@@ -225,69 +200,104 @@
                 document.getElementById('splash').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
                 initMap();
-            }, 1000);
+            }, 800);
         }
 
         function initMap() {
-            map = L.map('map').setView([55.7558, 37.6173], 4);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: ''
+            // Темная карта
+            map = L.map('map', { zoomControl: false }).setView([20, 0], 3);
+            L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 18
             }).addTo(map);
-        }
 
-        // ===== ПОИСК ЛЮБОГО ГОРОДА =====
-        function findCity() {
-            const query = document.getElementById('cityInput').value.trim();
-            if (query.length < 2) {
-                alert('Введите название города (минимум 2 буквы)');
-                return;
+            // Поиск локации пользователя
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => { map.flyTo([pos.coords.latitude, pos.coords.longitude], 10, { duration: 2 }); }
+                );
             }
 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&accept-language=ru`)
-                .then(response => response.json())
+            // Тап по карте
+            map.on('click', function(e) {
+                const lat = e.latlng.lat;
+                const lng = e.latlng.lng;
+                showLoading(true);
+                
+                fetch(`https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}&lang=ru`)
+                    .then(r => r.json())
+                    .then(data => {
+                        showLoading(false);
+                        let name = "Точка на карте";
+                        let country = "";
+                        
+                        if (data.features && data.features.length > 0) {
+                            const p = data.features[0].properties;
+                            name = p.name || p.street || p.city || "Точка на карте";
+                            country = p.country || "";
+                        }
+                        dropPin(lat, lng, name, country);
+                    })
+                    .catch(() => { 
+                        showLoading(false); 
+                        dropPin(lat, lng, "Точка на карте", ""); 
+                    });
+            });
+        }
+
+        function findCity() {
+            const query = document.getElementById('cityInput').value.trim();
+            if (query.length < 2) return alert('Введите город');
+            
+            showLoading(true);
+            fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1&lang=ru`)
+                .then(r => r.json())
                 .then(data => {
-                    if (data && data.length > 0) {
-                        const city = data[0];
-                        const lat = parseFloat(city.lat);
-                        const lng = parseFloat(city.lon);
-                        const name = city.display_name.split(',')[0];
-                        const country = city.display_name.split(',').slice(-2,-1)[0] || '';
-
-                        if (currentMarker) map.removeLayer(currentMarker);
-                        currentMarker = L.marker([lat, lng]).addTo(map);
-
-                        const popupContent = `
-                            <div class="city-card">
-                                <h2>${name}</h2>
-                                <p>${country}</p>
-                                <button class="route-btn" onclick="buildRoute(${lat}, ${lng})">🚗 ПОСТРОИТЬ МАРШРУТ</button>
-                            </div>
-                        `;
-
-                        currentMarker.bindPopup(popupContent, { maxWidth: 300 }).openPopup();
+                    showLoading(false);
+                    if (data.features && data.features.length > 0) {
+                        const place = data.features[0];
+                        const lat = place.geometry.coordinates[1];
+                        const lng = place.geometry.coordinates[0];
+                        const name = place.properties.name || query;
+                        const country = place.properties.country || "";
+                        
+                        dropPin(lat, lng, name, country);
                         map.flyTo([lat, lng], 12, { duration: 2 });
                     } else {
-                        alert('Город "' + query + '" не найден. Попробуйте другое название.');
+                        alert('Город не найден');
                     }
                 })
-                .catch(error => {
-                    alert('Ошибка поиска. Проверьте интернет.');
-                });
+                .catch(() => { showLoading(false); alert('Ошибка'); });
+        }
+
+        function dropPin(lat, lng, name, country) {
+            if (currentMarker) map.removeLayer(currentMarker);
+            const imgUrl = `https://loremflickr.com/300/200/${encodeURIComponent(name)},city/all`;
+
+            const popupContent = `
+                <div class="city-card">
+                    <img src="${imgUrl}" class="city-img" alt="${name}">
+                    <div class="city-info">
+                        <h2>${name}</h2>
+                        <p>${country}</p>
+                        <button class="route-btn" onclick="buildRoute(${lat}, ${lng})">🚗 МАРШРУТ</button>
+                    </div>
+                </div>
+            `;
+
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            currentMarker.bindPopup(popupContent, { maxWidth: 250, minWidth: 250 }).openPopup();
         }
 
         function buildRoute(lat, lng) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
         }
 
-        // Enter в поле поиска
-        document.addEventListener('DOMContentLoaded', () => {
-            const input = document.getElementById('cityInput');
-            if (input) {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') findCity();
-                });
-            }
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        document.getElementById('cityInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') findCity();
         });
     </script>
 </body>
